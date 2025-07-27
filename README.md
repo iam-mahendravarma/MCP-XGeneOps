@@ -4,7 +4,7 @@ A modern full-stack application with microservices architecture.
 
 ## Architecture Overview
 
-![MCP-XGeneOps Architecture](MCP-XGeneOps.drawio%20(1).svg)
+![MCP-XGeneOps Architecture](MCP-XGeneOps.drawio%20.svg)
 
 - **Frontend**: React + Tailwind CSS (deployed via Nginx)
 

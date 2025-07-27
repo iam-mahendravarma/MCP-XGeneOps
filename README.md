@@ -4,6 +4,8 @@ A modern full-stack application with microservices architecture.
 
 ## Architecture Overview
 
+![MCP-XGeneOps Architecture](MCP-XGeneOps.drawio%20(1).svg)
+
 - **Frontend**: React + Tailwind CSS (deployed via Nginx)
 - **Backend Microservices**: 
   - Node.js (NestJS) - Main API service

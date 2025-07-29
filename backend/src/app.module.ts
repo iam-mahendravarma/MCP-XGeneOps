@@ -23,8 +23,26 @@ import { ContentModule } from './content/content.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV !== 'production',
+      retryAttempts: 10,
+      retryDelay: 3000,
+      keepConnectionAlive: true,
+      extra: {
+        max: 20,
+        connectionTimeoutMillis: 5000,
+        idleTimeoutMillis: 30000,
+      },
     }),
-    MongooseModule.forRoot(process.env.MONGODB_URI),
+    MongooseModule.forRoot(process.env.MONGODB_URI, {
+      connectionFactory: (connection) => {
+        connection.on('connected', () => {
+          console.log('MongoDB connected successfully');
+        });
+        connection.on('error', (error) => {
+          console.error('MongoDB connection error:', error);
+        });
+        return connection;
+      },
+    }),
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '24h' },

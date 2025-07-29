@@ -27,14 +27,17 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - DATABASE_URL=postgresql://postgres:password@postgres:5432/userdb
+      - DATABASE_URL=postgresql://postgres:India123@postgres:5432/userdb
       - MONGODB_URI=mongodb://mongo:27017/contentdb
       - AI_SERVICE_URL=http://ai-service:8000
       - JWT_SECRET=your-super-secret-jwt-key
     depends_on:
-      - postgres
-      - mongo
-      - ai-service
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -51,7 +54,8 @@ services:
     environment:
       - MONGODB_URI=mongodb://mongo:27017/contentdb
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     volumes:
       - ./ai-service:/app
     networks:
@@ -63,13 +67,19 @@ services:
     environment:
       - POSTGRES_DB=userdb
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_PASSWORD=India123
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d userdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # MongoDB - Content storage
   mongo:
@@ -80,6 +90,12 @@ services:
       - mongo_data:/data/db
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # Nginx - Reverse proxy
   nginx:

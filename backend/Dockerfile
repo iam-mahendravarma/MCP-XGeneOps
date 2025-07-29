@@ -11,6 +11,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Copy .env file if it exists
+COPY .env* ./
+
 # Build the application
 RUN npm run build
 
@@ -18,6 +21,9 @@ RUN npm run build
 FROM node:18-alpine
 
 WORKDIR /app
+
+# Install netcat for database connectivity check
+RUN apk add --no-cache netcat-openbsd
 
 # Copy package files
 COPY package*.json ./
@@ -27,6 +33,10 @@ RUN npm ci --only=production
 
 # Copy built application
 COPY --from=builder /app/dist ./dist
+
+# Copy wait script
+COPY wait-for-db.sh ./
+RUN chmod +x wait-for-db.sh
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
@@ -39,5 +49,5 @@ USER nestjs
 # Expose port
 EXPOSE 3001
 
-# Start the application
-CMD ["node", "dist/main"] 
+# Start the application with wait script
+CMD ["./wait-for-db.sh"] 

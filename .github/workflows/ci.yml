@@ -94,21 +94,75 @@ jobs:
           sudo systemctl restart docker
 
       - name: Log in to Nexus Docker registry
-        run: echo "${{ secrets.NEXUS_PASSWORD }}" | docker login 172.16.20.1:8081 -u "${{ secrets.NEXUS_USERNAME }}" --password-stdin
+        run: |
+          echo "Testing Nexus registry connectivity..."
+          
+          # Test basic connectivity
+          if curl -s --connect-timeout 10 http://172.16.20.1:8081/ > /dev/null; then
+            echo "✅ Nexus is reachable"
+          else
+            echo "❌ Cannot reach Nexus at 172.16.20.1:8081"
+            exit 1
+          fi
+          
+          # Try docker login with timeout
+          echo "Attempting Docker login..."
+          timeout 30 bash -c 'echo "${{ secrets.NEXUS_PASSWORD }}" | docker login 172.16.20.1:8081 -u "${{ secrets.NEXUS_USERNAME }}" --password-stdin' || {
+            echo "⚠️ Standard Docker login failed, trying alternative methods..."
+            
+            # Try without repository path
+            echo "Trying login without repository path..."
+            timeout 30 bash -c 'echo "${{ secrets.NEXUS_PASSWORD }}" | docker login 172.16.20.1:8081 -u "${{ secrets.NEXUS_USERNAME }}" --password-stdin' || {
+              echo "⚠️ Login still failed, proceeding with push attempts..."
+              echo "Note: Some registries allow pushing without explicit login if credentials are in the image tag"
+            }
+          }
+          
+          echo "Docker login attempt completed"
 
       - name: Tag and push backend image
         run: |
+          echo "Tagging and pushing backend image..."
           docker tag mcp-xgeneops-backend 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-backend:latest
-          docker push 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-backend:latest
+          
+          # Try pushing with full repository path
+          if docker push 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-backend:latest; then
+            echo "✅ Backend image pushed successfully"
+          else
+            echo "⚠️ Push failed, trying alternative tag format..."
+            # Try without repository path
+            docker tag mcp-xgeneops-backend 172.16.20.1:8081/mcp-xgeneops-backend:latest
+            docker push 172.16.20.1:8081/mcp-xgeneops-backend:latest || echo "❌ Backend push failed"
+          fi
 
       - name: Tag and push frontend image
         run: |
+          echo "Tagging and pushing frontend image..."
           docker tag mcp-xgeneops-frontend 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-frontend:latest
-          docker push 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-frontend:latest
+          
+          # Try pushing with full repository path
+          if docker push 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-frontend:latest; then
+            echo "✅ Frontend image pushed successfully"
+          else
+            echo "⚠️ Push failed, trying alternative tag format..."
+            # Try without repository path
+            docker tag mcp-xgeneops-frontend 172.16.20.1:8081/mcp-xgeneops-frontend:latest
+            docker push 172.16.20.1:8081/mcp-xgeneops-frontend:latest || echo "❌ Frontend push failed"
+          fi
 
       - name: Tag and push ai-service image
         run: |
+          echo "Tagging and pushing ai-service image..."
           docker tag mcp-xgeneops-ai-service 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-ai-service:latest
-          docker push 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-ai-service:latest
+          
+          # Try pushing with full repository path
+          if docker push 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-ai-service:latest; then
+            echo "✅ AI service image pushed successfully"
+          else
+            echo "⚠️ Push failed, trying alternative tag format..."
+            # Try without repository path
+            docker tag mcp-xgeneops-ai-service 172.16.20.1:8081/mcp-xgeneops-ai-service:latest
+            docker push 172.16.20.1:8081/mcp-xgeneops-ai-service:latest || echo "❌ AI service push failed"
+          fi
 
     

@@ -64,6 +64,6 @@ jobs:
 
       - name: Build all images with docker-compose
         run: |
-          docker-compose build
+          docker compose build
 
     

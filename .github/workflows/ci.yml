@@ -63,16 +63,10 @@ jobs:
 
       - name: Upload report to Slack
         uses: slackapi/slack-github-action@v1.24.0
-        with:
-          payload: |
-            {
-              "channel": "#mcpxgenops",
-              "text": ":rotating_light: *Trivy Vulnerability Report Available*",
-              "attachments": []
-            }
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_FILE: trivy-report.html
           SLACK_FILENAME: trivy-report.html
           SLACK_TITLE: "Trivy Vulnerability Report"
           SLACK_CHANNEL: C09845ECA4S
+

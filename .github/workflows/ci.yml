@@ -75,4 +75,4 @@ jobs:
           SLACK_FILE: trivy-report.html
           SLACK_FILENAME: trivy-report.html
           SLACK_TITLE: "Trivy Vulnerability Report"
-          SLACK_CHANNEL: "#mcpxgenops"
+          SLACK_CHANNEL: C09845ECA4S

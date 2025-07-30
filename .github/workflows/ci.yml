@@ -6,20 +6,73 @@ on:
       - main
 
 jobs:
-  build:
-    name: Build and analyze
+  sonar-analysis:
+    name: Analyze with SonarQube
     runs-on: self-hosted
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
 
-      - uses: sonarsource/sonarqube-scan-action@master
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
         with:
-            args: >
-                -Dsonar.projectKey=MCPXGenOps
-                -Dsonar.sources=.
+          args: >
+            -Dsonar.projectKey=MCPXGenOps
+            -Dsonar.sources=.
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+  trivy-scan:
+    name: Vulnerability Scan with Trivy
+    runs-on: ubuntu-latest
+    needs: sonar-analysis
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Download Trivy HTML Template
+        run: curl -O https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
+
+      - name: Run Trivy and generate HTML report
+        run: |
+          trivy fs . --format template --template "@html.tpl" --output trivy-report.html --severity CRITICAL,HIGH
+
+      - name: Upload Trivy report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.html
+
+  upload-to-slack:
+    name: Upload Trivy Report to Slack
+    runs-on: ubuntu-latest
+    needs: trivy-scan
+
+    steps:
+      - name: Download Trivy report from artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: trivy-report
+
+      - name: Upload report to Slack
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "channel": "#mcpxgenops",
+              "text": ":rotating_light: *Trivy Vulnerability Report Available*",
+              "attachments": []
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_FILE: trivy-report.html
+          SLACK_FILENAME: trivy-report.html
+          SLACK_TITLE: "Trivy Vulnerability Report"
+          SLACK_CHANNEL: "#mcpxgenops"

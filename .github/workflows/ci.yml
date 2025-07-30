@@ -18,7 +18,7 @@ jobs:
       - uses: sonarsource/sonarqube-scan-action@master
         with:
             args: >
-                -Dsonar.projectKey=MCPXGeneOps
+                -Dsonar.projectKey=MCPXGenOps
                 -Dsonar.sources=.
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

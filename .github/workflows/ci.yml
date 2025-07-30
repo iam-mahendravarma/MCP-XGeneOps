@@ -61,24 +61,23 @@ jobs:
         with:
           name: trivy-report
 
-      - name: Upload Trivy HTML Report to Slack
-        uses: slackapi/slack-github-action@v1.24.0
-        with:
-            payload: |
-              {
-                "channel": "C09845ECA4S",
-                "initial_comment": "📄 Trivy Vulnerability Report",
-                "filename": "trivy-report.html",
-                "filetype": "html",
-                "title": "Trivy Report",
-                "content": "${{ steps.read-html.outputs.report }}"
-              }
-        env:
-            SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
       - name: Read HTML file content
         id: read-html
         run: |
           REPORT_CONTENT=$(cat trivy-report.html | sed ':a;N;$!ba;s/\n/\\n/g')
           echo "report=$REPORT_CONTENT" >> $GITHUB_OUTPUT
 
+      - name: Upload Trivy HTML Report to Slack
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: C09845ECA4S
+          payload: |
+            {
+              "initial_comment": "📄 Trivy Vulnerability Report",
+              "filename": "trivy-report.html",
+              "filetype": "html",
+              "title": "Trivy Report",
+              "content": "${{ steps.read-html.outputs.report }}"
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

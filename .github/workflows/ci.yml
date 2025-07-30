@@ -90,25 +90,25 @@ jobs:
 
       - name: Allow insecure Nexus registry
         run: |
-          echo '{ "insecure-registries": ["172.16.20.1:5000"] }' | sudo tee /etc/docker/daemon.json
+          echo '{ "insecure-registries": ["172.16.20.1:8081"] }' | sudo tee /etc/docker/daemon.json
           sudo systemctl restart docker
 
       - name: Log in to Nexus Docker registry
-        run: echo "${{ secrets.NEXUS_PASSWORD }}" | docker login 172.16.20.1:5000 -u "${{ secrets.NEXUS_USERNAME }}" --password-stdin
+        run: echo "${{ secrets.NEXUS_PASSWORD }}" | docker login 172.16.20.1:8081 -u "${{ secrets.NEXUS_USERNAME }}" --password-stdin
 
       - name: Tag and push backend image
         run: |
-          docker tag mcp-xgeneops-backend 172.16.20.1:5000/mcp-xgeneops-backend:latest
-          docker push 172.16.20.1:5000/mcp-xgeneops-backend:latest
+          docker tag mcp-xgeneops-backend 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-backend:latest
+          docker push 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-backend:latest
 
       - name: Tag and push frontend image
         run: |
-          docker tag mcp-xgeneops-frontend 172.16.20.1:5000/mcp-xgeneops-frontend:latest
-          docker push 172.16.20.1:5000/mcp-xgeneops-frontend:latest
+          docker tag mcp-xgeneops-frontend 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-frontend:latest
+          docker push 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-frontend:latest
 
       - name: Tag and push ai-service image
         run: |
-          docker tag mcp-xgeneops-ai-service 172.16.20.1:5000/mcp-xgeneops-ai-service:latest
-          docker push 172.16.20.1:5000/mcp-xgeneops-ai-service:latest
+          docker tag mcp-xgeneops-ai-service 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-ai-service:latest
+          docker push 172.16.20.1:8081/repository/docker-hosted/mcp-xgeneops-ai-service:latest
 
     

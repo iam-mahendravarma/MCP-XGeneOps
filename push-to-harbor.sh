@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Harbor Registry Configuration
-HARBOR_HOST="172.16.20.11:8080"
+HARBOR_HOST="172.16.20.11:8443"
 HARBOR_PROJECT="mcpxgenops"
 
 # Colors for output
@@ -19,6 +19,16 @@ echo ""
 if ! command -v docker &> /dev/null; then
     echo -e "${RED}❌ Docker is not installed. Please install Docker first.${NC}"
     exit 1
+fi
+
+# Configure Docker for insecure registry (if not already configured)
+if ! grep -q "172.16.20.11:8443" /etc/docker/daemon.json 2>/dev/null; then
+    echo -e "${YELLOW}🔧 Configuring Docker for insecure registry...${NC}"
+    sudo mkdir -p /etc/docker
+    echo '{"insecure-registries": ["172.16.20.11:8443"]}' | sudo tee /etc/docker/daemon.json
+    sudo systemctl restart docker
+    sleep 5
+    echo -e "${GREEN}✅ Docker configured for insecure registry${NC}"
 fi
 
 # Check if user is logged in to Harbor

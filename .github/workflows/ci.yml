@@ -85,13 +85,17 @@ jobs:
             echo "Created ai-service/.env"
           fi
 
-      - name: Login to Harbor Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.HARBOR_HOST }}
-          username: ${{ secrets.HARBOR_USERNAME }}
-          password: ${{ secrets.HARBOR_PASSWORD }}
-          insecure-registries: ${{ secrets.HARBOR_HOST }}
+      - name: Configure Docker for insecure registry
+        run: |
+          echo '{"insecure-registries": ["172.16.20.11:8443"]}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
+          sleep 10
+          docker start harbor-jobservice nginx harbor-core redis harbor-portal registryctl harbor-db registry
+          sleep 10
+
+      - name: Login to Harbor Registry (HTTP)
+        run: |
+          echo "${{ secrets.HARBOR_PASSWORD }}" | docker login ${{ secrets.HARBOR_HOST }} -u ${{ secrets.HARBOR_USERNAME }} --password-stdin
 
       - name: Build and push frontend image
         run: |

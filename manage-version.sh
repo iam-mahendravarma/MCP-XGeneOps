@@ -30,7 +30,7 @@ increment_version() {
     echo "v$new_version_num"
 }
 
-# Function to set specific version
+# Function tot set specific version
 set_version() {
     local new_version=$1
     echo "$new_version" > "$VERSION_FILE"

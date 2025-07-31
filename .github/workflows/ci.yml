@@ -51,7 +51,7 @@ jobs:
           path: trivy-report.html
 
   docker-build:
-    name: Build Docker Images
+    name: Build and Push Docker Images to Harbor
     runs-on: ubuntu-latest
     needs: trivy-scan
 
@@ -85,30 +85,59 @@ jobs:
             echo "Created ai-service/.env"
           fi
 
-      - name: Build all images with docker compose
+      - name: Login to Harbor Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.HARBOR_HOST }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Build and push frontend image
+        run: |
+          docker build -t ${{ secrets.HARBOR_HOST }}/mcpxgenops/frontend:${{ github.sha }} ./frontend
+          docker build -t ${{ secrets.HARBOR_HOST }}/mcpxgenops/frontend:latest ./frontend
+          docker push ${{ secrets.HARBOR_HOST }}/mcpxgenops/frontend:${{ github.sha }}
+          docker push ${{ secrets.HARBOR_HOST }}/mcpxgenops/frontend:latest
+
+      - name: Build and push backend image
+        run: |
+          docker build -t ${{ secrets.HARBOR_HOST }}/mcpxgenops/backend:${{ github.sha }} ./backend
+          docker build -t ${{ secrets.HARBOR_HOST }}/mcpxgenops/backend:latest ./backend
+          docker push ${{ secrets.HARBOR_HOST }}/mcpxgenops/backend:${{ github.sha }}
+          docker push ${{ secrets.HARBOR_HOST }}/mcpxgenops/backend:latest
+
+      - name: Build and push ai-service image
+        run: |
+          docker build -t ${{ secrets.HARBOR_HOST }}/mcpxgenops/ai-service:${{ github.sha }} ./ai-service
+          docker build -t ${{ secrets.HARBOR_HOST }}/mcpxgenops/ai-service:latest ./ai-service
+          docker push ${{ secrets.HARBOR_HOST }}/mcpxgenops/ai-service:${{ github.sha }}
+          docker push ${{ secrets.HARBOR_HOST }}/mcpxgenops/ai-service:latest
+
+      - name: Tag and push PostgreSQL image
+        run: |
+          docker pull postgres:15-alpine
+          docker tag postgres:15-alpine ${{ secrets.HARBOR_HOST }}/mcpxgenops/postgres:${{ github.sha }}
+          docker tag postgres:15-alpine ${{ secrets.HARBOR_HOST }}/mcpxgenops/postgres:latest
+          docker push ${{ secrets.HARBOR_HOST }}/mcpxgenops/postgres:${{ github.sha }}
+          docker push ${{ secrets.HARBOR_HOST }}/mcpxgenops/postgres:latest
+
+      - name: Tag and push MongoDB image
+        run: |
+          docker pull mongo:6
+          docker tag mongo:6 ${{ secrets.HARBOR_HOST }}/mcpxgenops/mongo:${{ github.sha }}
+          docker tag mongo:6 ${{ secrets.HARBOR_HOST }}/mcpxgenops/mongo:latest
+          docker push ${{ secrets.HARBOR_HOST }}/mcpxgenops/mongo:${{ github.sha }}
+          docker push ${{ secrets.HARBOR_HOST }}/mcpxgenops/mongo:latest
+
+      - name: Tag and push Nginx image
+        run: |
+          docker pull nginx:alpine
+          docker tag nginx:alpine ${{ secrets.HARBOR_HOST }}/mcpxgenops/nginx:${{ github.sha }}
+          docker tag nginx:alpine ${{ secrets.HARBOR_HOST }}/mcpxgenops/nginx:latest
+          docker push ${{ secrets.HARBOR_HOST }}/mcpxgenops/nginx:${{ github.sha }}
+          docker push ${{ secrets.HARBOR_HOST }}/mcpxgenops/nginx:latest
+
+      - name: Build all images with docker compose (for local testing)
         run: docker compose build
 
-      - name: Allow insecure Nexus registry
-        run: |
-          echo '{ "insecure-registries": ["172.16.20.1:5000"] }' | sudo tee /etc/docker/daemon.json
-          sudo systemctl restart docker
-
-      - name: Log in to Nexus Docker registry
-        run: echo "${{ secrets.NEXUS_PASSWORD }}" | docker login 172.16.20.1:5000 -u "${{ secrets.NEXUS_USERNAME }}" --password-stdin
-
-      - name: Tag and push backend image
-        run: |
-          docker tag mcp-xgeneops-backend 172.16.20.1:5000/repository/docker-hosted/mcp-xgeneops-backend:latest
-          docker push 172.16.20.1:5000/repository/docker-hosted/mcp-xgeneops-backend:latest
-
-      - name: Tag and push frontend image
-        run: |
-          docker tag mcp-xgeneops-frontend 172.16.20.1:5000/repository/docker-hosted/mcp-xgeneops-frontend:latest
-          docker push 172.16.20.1:5000/repository/docker-hosted/mcp-xgeneops-frontend:latest
-
-      - name: Tag and push ai-service image
-        run: |
-          docker tag mcp-xgeneops-ai-service 172.16.20.1:5000/repository/docker-hosted/mcp-xgeneops-ai-service:latest
-          docker push 172.16.20.1:5000/repository/docker-hosted/mcp-xgeneops-ai-service:latest
-
-    
+      

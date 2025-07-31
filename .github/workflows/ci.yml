@@ -156,34 +156,41 @@ jobs:
 
       - name: Push frontend image
         run: |
-          docker push 172.16.20.11:8443/mcpxgenops/frontend:${{ env.VERSION }}
+          docker push 172.16.20.11:8443/mcpxgenops/frontend:${{ github.sha }}
+          docker push 172.16.20.11:8443/mcpxgenops/frontend:latest
 
       - name: Push backend image
         run: |
-          docker push 172.16.20.11:8443/mcpxgenops/backend:${{ env.VERSION }}
+          docker push 172.16.20.11:8443/mcpxgenops/backend:${{ github.sha }}
+          docker push 172.16.20.11:8443/mcpxgenops/backend:latest
 
       - name: Push ai-service image
         run: |
-          docker push 172.16.20.11:8443/mcpxgenops/ai-service:${{ env.VERSION }}
+          docker push 172.16.20.11:8443/mcpxgenops/ai-service:${{ github.sha }}
+          docker push 172.16.20.11:8443/mcpxgenops/ai-service:latest
 
       - name: Push PostgreSQL image
         run: |
-          docker push 172.16.20.11:8443/mcpxgenops/postgres:${{ env.VERSION }}
+          docker push 172.16.20.11:8443/mcpxgenops/postgres:${{ github.sha }}
+          docker push 172.16.20.11:8443/mcpxgenops/postgres:latest
 
       - name: Push MongoDB image
         run: |
-          docker push 172.16.20.11:8443/mcpxgenops/mongo:${{ env.VERSION }}
+          docker push 172.16.20.11:8443/mcpxgenops/mongo:${{ github.sha }}
+          docker push 172.16.20.11:8443/mcpxgenops/mongo:latest
 
       - name: Push Nginx image
         run: |
-          docker push 172.16.20.11:8443/mcpxgenops/nginx:${{ env.VERSION }}
+          docker push 172.16.20.11:8443/mcpxgenops/nginx:${{ github.sha }}
+          docker push 172.16.20.11:8443/mcpxgenops/nginx:latest
 
-      - name: Commit & Push
+      - name: Bump version and commit
         run: |
-         git config user.name "github-actions"
-         git config user.email "github-actions@github.com"
-         git add .
-         git commit -m "Auto update" || echo "No changes to commit"
-         git push
-          env:
-            GITHUB_TOKEN: ${{ secrets.HUB_TOKEN }}
+          current_version=$(cat .version | sed 's/v//')
+          next_version="v$((current_version + 1))"
+          echo "$next_version" > .version
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add .version
+          git commit -m "Bump version to $next_version"
+          git push

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Harbor Registry Configuration
-HARBOR_HOST="172.16.20.11:8443"
+HARBOR_HOST="172.16.20.11:8080"
 HARBOR_PROJECT="mcpxgenops"
 
 # Colors for output

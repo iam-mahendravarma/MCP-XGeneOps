@@ -90,8 +90,6 @@ jobs:
           echo '{"insecure-registries": ["172.16.20.11:8443"]}' | sudo tee /etc/docker/daemon.json
           sudo systemctl restart docker
           sleep 10
-          docker start harbor-jobservice nginx harbor-core redis harbor-portal registryctl harbor-db registry
-          sleep 10
 
       - name: Login to Harbor Registry (HTTP)
         run: |

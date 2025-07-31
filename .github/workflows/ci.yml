@@ -62,6 +62,25 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Generate version number
+        id: version
+        run: |
+          # Try to get version from Harbor first, then from version.txt file
+          LATEST_VERSION=$(curl -s http://172.16.20.11:8443/v2/mcpxgenops/frontend/tags/list 2>/dev/null | grep -o 'v[0-9]*' | sort -V | tail -n 1 || cat version.txt 2>/dev/null || echo "v0")
+          
+          # Extract version number and increment
+          VERSION_NUM=$(echo $LATEST_VERSION | sed 's/v//')
+          NEW_VERSION_NUM=$((VERSION_NUM + 1))
+          NEW_VERSION="v$NEW_VERSION_NUM"
+          
+          # Update version.txt file
+          echo "$NEW_VERSION" > version.txt
+          
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Previous version: $LATEST_VERSION"
+          echo "New version: $NEW_VERSION"
+          echo "Version file updated: version.txt"
+
       - name: Set up environment files (.env)
         run: |
           if [ ! -f frontend/.env ]; then
@@ -82,34 +101,40 @@ jobs:
       - name: Build frontend image
         run: |
           docker build -t 172.16.20.11:8443/mcpxgenops/frontend:${{ github.sha }} ./frontend
+          docker build -t 172.16.20.11:8443/mcpxgenops/frontend:${{ steps.version.outputs.version }} ./frontend
           docker build -t 172.16.20.11:8443/mcpxgenops/frontend:latest ./frontend
 
       - name: Build backend image
         run: |
           docker build -t 172.16.20.11:8443/mcpxgenops/backend:${{ github.sha }} ./backend
+          docker build -t 172.16.20.11:8443/mcpxgenops/backend:${{ steps.version.outputs.version }} ./backend
           docker build -t 172.16.20.11:8443/mcpxgenops/backend:latest ./backend
 
       - name: Build ai-service image
         run: |
           docker build -t 172.16.20.11:8443/mcpxgenops/ai-service:${{ github.sha }} ./ai-service
+          docker build -t 172.16.20.11:8443/mcpxgenops/ai-service:${{ steps.version.outputs.version }} ./ai-service
           docker build -t 172.16.20.11:8443/mcpxgenops/ai-service:latest ./ai-service
 
       - name: Tag PostgreSQL image
         run: |
           docker pull postgres:15-alpine
           docker tag postgres:15-alpine 172.16.20.11:8443/mcpxgenops/postgres:${{ github.sha }}
+          docker tag postgres:15-alpine 172.16.20.11:8443/mcpxgenops/postgres:${{ steps.version.outputs.version }}
           docker tag postgres:15-alpine 172.16.20.11:8443/mcpxgenops/postgres:latest
 
       - name: Tag MongoDB image
         run: |
           docker pull mongo:6
           docker tag mongo:6 172.16.20.11:8443/mcpxgenops/mongo:${{ github.sha }}
+          docker tag mongo:6 172.16.20.11:8443/mcpxgenops/mongo:${{ steps.version.outputs.version }}
           docker tag mongo:6 172.16.20.11:8443/mcpxgenops/mongo:latest
 
       - name: Tag Nginx image
         run: |
           docker pull nginx:alpine
           docker tag nginx:alpine 172.16.20.11:8443/mcpxgenops/nginx:${{ github.sha }}
+          docker tag nginx:alpine 172.16.20.11:8443/mcpxgenops/nginx:${{ steps.version.outputs.version }}
           docker tag nginx:alpine 172.16.20.11:8443/mcpxgenops/nginx:latest
 
       - name: Build all images with docker compose (optional/local testing)
@@ -123,6 +148,25 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Generate version number
+        id: version
+        run: |
+          # Try to get version from Harbor first, then from version.txt file
+          LATEST_VERSION=$(curl -s http://172.16.20.11:8443/v2/mcpxgenops/frontend/tags/list 2>/dev/null | grep -o 'v[0-9]*' | sort -V | tail -n 1 || cat version.txt 2>/dev/null || echo "v0")
+          
+          # Extract version number and increment
+          VERSION_NUM=$(echo $LATEST_VERSION | sed 's/v//')
+          NEW_VERSION_NUM=$((VERSION_NUM + 1))
+          NEW_VERSION="v$NEW_VERSION_NUM"
+          
+          # Update version.txt file
+          echo "$NEW_VERSION" > version.txt
+          
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Previous version: $LATEST_VERSION"
+          echo "New version: $NEW_VERSION"
+          echo "Version file updated: version.txt"
 
       - name: Configure Docker to allow HTTP (insecure) registry
         run: |
@@ -142,29 +186,50 @@ jobs:
       - name: Push frontend image
         run: |
           docker push 172.16.20.11:8443/mcpxgenops/frontend:${{ github.sha }}
+          docker push 172.16.20.11:8443/mcpxgenops/frontend:${{ steps.version.outputs.version }}
           docker push 172.16.20.11:8443/mcpxgenops/frontend:latest
 
       - name: Push backend image
         run: |
           docker push 172.16.20.11:8443/mcpxgenops/backend:${{ github.sha }}
+          docker push 172.16.20.11:8443/mcpxgenops/backend:${{ steps.version.outputs.version }}
           docker push 172.16.20.11:8443/mcpxgenops/backend:latest
 
       - name: Push ai-service image
         run: |
           docker push 172.16.20.11:8443/mcpxgenops/ai-service:${{ github.sha }}
+          docker push 172.16.20.11:8443/mcpxgenops/ai-service:${{ steps.version.outputs.version }}
           docker push 172.16.20.11:8443/mcpxgenops/ai-service:latest
 
       - name: Push PostgreSQL image
         run: |
           docker push 172.16.20.11:8443/mcpxgenops/postgres:${{ github.sha }}
+          docker push 172.16.20.11:8443/mcpxgenops/postgres:${{ steps.version.outputs.version }}
           docker push 172.16.20.11:8443/mcpxgenops/postgres:latest
 
       - name: Push MongoDB image
         run: |
           docker push 172.16.20.11:8443/mcpxgenops/mongo:${{ github.sha }}
+          docker push 172.16.20.11:8443/mcpxgenops/mongo:${{ steps.version.outputs.version }}
           docker push 172.16.20.11:8443/mcpxgenops/mongo:latest
 
       - name: Push Nginx image
         run: |
           docker push 172.16.20.11:8443/mcpxgenops/nginx:${{ github.sha }}
+          docker push 172.16.20.11:8443/mcpxgenops/nginx:${{ steps.version.outputs.version }}
           docker push 172.16.20.11:8443/mcpxgenops/nginx:latest
+
+      - name: Create Release Summary
+        run: |
+          echo "## 🚀 New Release: ${{ steps.version.outputs.version }}" >> release_summary.md
+          echo "" >> release_summary.md
+          echo "### 📦 Images Pushed:" >> release_summary.md
+          echo "- Frontend: \`172.16.20.11:8443/mcpxgenops/frontend:${{ steps.version.outputs.version }}\`" >> release_summary.md
+          echo "- Backend: \`172.16.20.11:8443/mcpxgenops/backend:${{ steps.version.outputs.version }}\`" >> release_summary.md
+          echo "- AI Service: \`172.16.20.11:8443/mcpxgenops/ai-service:${{ steps.version.outputs.version }}\`" >> release_summary.md
+          echo "- PostgreSQL: \`172.16.20.11:8443/mcpxgenops/postgres:${{ steps.version.outputs.version }}\`" >> release_summary.md
+          echo "- MongoDB: \`172.16.20.11:8443/mcpxgenops/mongo:${{ steps.version.outputs.version }}\`" >> release_summary.md
+          echo "- Nginx: \`172.16.20.11:8443/mcpxgenops/nginx:${{ steps.version.outputs.version }}\`" >> release_summary.md
+          echo "" >> release_summary.md
+          echo "### 🔗 Commit SHA: \`${{ github.sha }}\`" >> release_summary.md
+          echo "### 📅 Build Date: $(date)" >> release_summary.md

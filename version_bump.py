@@ -1,22 +1,35 @@
-import os
 import re
 
 VERSION_FILE = "version.txt"
 
-# If version.txt does not exist, start at v1
-if not os.path.exists(VERSION_FILE):
-    version = "v1"
-else:
-    with open(VERSION_FILE, "r") as f:
-        current = f.read().strip()
-        match = re.match(r"v(\d+)", current)
-        if match:
-            num = int(match.group(1)) + 1
-            version = f"v{num}"
-        else:
-            version = "v1"
+def read_version():
+    try:
+        with open(VERSION_FILE, "r") as f:
+            version = f.read().strip()
+            # Expect version format like v2, v3...
+            return version
+    except FileNotFoundError:
+        # If no version file exists, start from v1
+        return "v1"
 
-with open(VERSION_FILE, "w") as f:
-    f.write(version)
+def bump_version(version):
+    # Extract the numeric part
+    match = re.match(r"v(\d+)", version)
+    if not match:
+        raise ValueError(f"Invalid version format: {version}")
+    number = int(match.group(1))
+    number += 1
+    return f"v{number}"
 
-print(version)
+def write_version(version):
+    with open(VERSION_FILE, "w") as f:
+        f.write(version)
+
+def main():
+    old_version = read_version()
+    new_version = bump_version(old_version)
+    write_version(new_version)
+    print(new_version)
+
+if __name__ == "__main__":
+    main()

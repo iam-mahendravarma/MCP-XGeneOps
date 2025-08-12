@@ -18,6 +18,9 @@ jspm_packages/
 dist/
 build/
 
+# Version file
+version.txt
+
 # OS files
 .DS_Store
 Thumbs.db

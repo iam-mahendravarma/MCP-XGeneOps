@@ -66,36 +66,36 @@ jobs:
 
       - name: Build frontend image
         run: |
-          docker build -t networkcloud01/mcpxgenops/frontend:${{ steps.version.outputs.version }} \
-                       -t networkcloud01/mcpxgenops/frontend:latest ./frontend
+          docker build -t networkcloud01/mcpxgenops:frontend-${{ steps.version.outputs.version }} \
+                       -t networkcloud01/mcpxgenops:frontend-latest ./frontend
 
       - name: Build backend image
         run: |
-          docker build -t networkcloud01/mcpxgenops/backend:${{ steps.version.outputs.version }} \
-                       -t networkcloud01/mcpxgenops/backend:latest ./backend
+          docker build -t networkcloud01/mcpxgenops:backend-${{ steps.version.outputs.version }} \
+                       -t networkcloud01/mcpxgenops:backend-latest ./backend
 
       - name: Build ai-service image
         run: |
-          docker build -t networkcloud01/mcpxgenops/ai-service:${{ steps.version.outputs.version }} \
-                       -t networkcloud01/mcpxgenops/ai-service:latest ./ai-service
+          docker build -t networkcloud01/mcpxgenops:ai-service-${{ steps.version.outputs.version }} \
+                       -t networkcloud01/mcpxgenops:ai-service-latest ./ai-service
 
       - name: Tag PostgreSQL image
         run: |
           docker pull postgres:15-alpine
-          docker tag postgres:15-alpine networkcloud01/mcpxgenops/postgres:${{ steps.version.outputs.version }}
-          docker tag postgres:15-alpine networkcloud01/mcpxgenops/postgres:latest
+          docker tag postgres:15-alpine networkcloud01/mcpxgenops:postgres-${{ steps.version.outputs.version }}
+          docker tag postgres:15-alpine networkcloud01/mcpxgenops:postgres-latest
 
       - name: Tag MongoDB image
         run: |
           docker pull mongo:6
-          docker tag mongo:6 networkcloud01/mcpxgenops/mongo:${{ steps.version.outputs.version }}
-          docker tag mongo:6 networkcloud01/mcpxgenops/mongo:latest
+          docker tag mongo:6 networkcloud01/mcpxgenops:mongo-${{ steps.version.outputs.version }}
+          docker tag mongo:6 networkcloud01/mcpxgenops:mongo-latest
 
       - name: Tag Nginx image
         run: |
           docker pull nginx:alpine
-          docker tag nginx:alpine networkcloud01/mcpxgenops/nginx:${{ steps.version.outputs.version }}
-          docker tag nginx:alpine networkcloud01/mcpxgenops/nginx:latest
+          docker tag nginx:alpine networkcloud01/mcpxgenops:nginx-${{ steps.version.outputs.version }}
+          docker tag nginx:alpine networkcloud01/mcpxgenops:nginx-latest
 
   docker-push:
     name: Push Docker Images to Docker Hub
@@ -116,28 +116,28 @@ jobs:
 
       - name: Push frontend image
         run: |
-          docker push networkcloud01/mcpxgenops/frontend:${{ steps.version.outputs.version }}
-          docker push networkcloud01/mcpxgenops/frontend:latest
+          docker push networkcloud01/mcpxgenops:frontend-${{ steps.version.outputs.version }}
+          docker push networkcloud01/mcpxgenops:frontend-latest
       - name: Push backend image
         run: |
-          docker push networkcloud01/mcpxgenops/backend:${{ steps.version.outputs.version }}
-          docker push networkcloud01/mcpxgenops/backend:latest
+          docker push networkcloud01/mcpxgenops:backend-${{ steps.version.outputs.version }}
+          docker push networkcloud01/mcpxgenops:backend-latest
       - name: Push ai-service image
         run: |
-          docker push networkcloud01/mcpxgenops/ai-service:${{ steps.version.outputs.version }}
-          docker push networkcloud01/mcpxgenops/ai-service:latest
+          docker push networkcloud01/mcpxgenops:ai-service-${{ steps.version.outputs.version }}
+          docker push networkcloud01/mcpxgenops:ai-service-latest
       - name: Push PostgreSQL image
         run: |
-          docker push networkcloud01/mcpxgenops/postgres:${{ steps.version.outputs.version }}
-          docker push networkcloud01/mcpxgenops/postgres:latest
+          docker push networkcloud01/mcpxgenops:postgres-${{ steps.version.outputs.version }}
+          docker push networkcloud01/mcpxgenops:postgres-latest
       - name: Push MongoDB image
         run: |
-          docker push networkcloud01/mcpxgenops/mongo:${{ steps.version.outputs.version }}
-          docker push networkcloud01/mcpxgenops/mongo:latest
+          docker push networkcloud01/mcpxgenops:mongo-${{ steps.version.outputs.version }}
+          docker push networkcloud01/mcpxgenops:mongo-latest
       - name: Push Nginx image
         run: |
-          docker push networkcloud01/mcpxgenops/nginx:${{ steps.version.outputs.version }}
-          docker push networkcloud01/mcpxgenops/nginx:latest
+          docker push networkcloud01/mcpxgenops:nginx-${{ steps.version.outputs.version }}
+          docker push networkcloud01/mcpxgenops:nginx-latest
 
   notify-slack:
     name: Notify on Slack

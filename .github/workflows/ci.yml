@@ -59,6 +59,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Run version bump script
+        id: version
+        run: |
+          VERSION=$(python3 version_bump.py)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -81,35 +87,35 @@ jobs:
 
       - name: Build frontend image
         run: |
-          docker build -t networkcloud01/mcpxgenops/frontend:${{ github.sha }} ./frontend
-          docker build -t networkcloud01/mcpxgenops/frontend:latest ./frontend
+          docker build -t networkcloud01/mcpxgenops/frontend:${{ steps.version.outputs.version }} \
+                       -t networkcloud01/mcpxgenops/frontend:latest ./frontend
 
       - name: Build backend image
         run: |
-          docker build -t networkcloud01/mcpxgenops/backend:${{ github.sha }} ./backend
-          docker build -t networkcloud01/mcpxgenops/backend:latest ./backend
+          docker build -t networkcloud01/mcpxgenops/backend:${{ steps.version.outputs.version }} \
+                       -t networkcloud01/mcpxgenops/backend:latest ./backend
 
       - name: Build ai-service image
         run: |
-          docker build -t networkcloud01/mcpxgenops/ai-service:${{ github.sha }} ./ai-service
-          docker build -t networkcloud01/mcpxgenops/ai-service:latest ./ai-service
+          docker build -t networkcloud01/mcpxgenops/ai-service:${{ steps.version.outputs.version }} \
+                       -t networkcloud01/mcpxgenops/ai-service:latest ./ai-service
 
       - name: Tag PostgreSQL image
         run: |
           docker pull postgres:15-alpine
-          docker tag postgres:15-alpine networkcloud01/mcpxgenops/postgres:${{ github.sha }}
+          docker tag postgres:15-alpine networkcloud01/mcpxgenops/postgres:${{ steps.version.outputs.version }}
           docker tag postgres:15-alpine networkcloud01/mcpxgenops/postgres:latest
 
       - name: Tag MongoDB image
         run: |
           docker pull mongo:6
-          docker tag mongo:6 networkcloud01/mcpxgenops/mongo:${{ github.sha }}
+          docker tag mongo:6 networkcloud01/mcpxgenops/mongo:${{ steps.version.outputs.version }}
           docker tag mongo:6 networkcloud01/mcpxgenops/mongo:latest
 
       - name: Tag Nginx image
         run: |
           docker pull nginx:alpine
-          docker tag nginx:alpine networkcloud01/mcpxgenops/nginx:${{ github.sha }}
+          docker tag nginx:alpine networkcloud01/mcpxgenops/nginx:${{ steps.version.outputs.version }}
           docker tag nginx:alpine networkcloud01/mcpxgenops/nginx:latest
 
       - name: Build all images with docker compose (optional/local testing)
@@ -124,48 +130,45 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Generate version number
+      - name: Read version from file
         id: version
         run: |
-          LATEST_VERSION=$(cat version.txt 2>/dev/null || echo "v0")
-          VERSION_NUM=$(echo $LATEST_VERSION | sed 's/v//')
-          NEW_VERSION_NUM=$((VERSION_NUM + 1))
-          NEW_VERSION="v$NEW_VERSION_NUM"
-          echo "$NEW_VERSION" > version.txt
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          VERSION=$(cat version.txt)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Login to Docker Hub
         run: |
-          echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+          echo "${{ secrets.DOCKERHUB_PASSWORD }}" | \
+          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
       - name: Push frontend image
         run: |
-          docker push networkcloud01/mcpxgenops/frontend:${{ github.sha }}
+          docker push networkcloud01/mcpxgenops/frontend:${{ steps.version.outputs.version }}
           docker push networkcloud01/mcpxgenops/frontend:latest
 
       - name: Push backend image
         run: |
-          docker push networkcloud01/mcpxgenops/backend:${{ github.sha }}
+          docker push networkcloud01/mcpxgenops/backend:${{ steps.version.outputs.version }}
           docker push networkcloud01/mcpxgenops/backend:latest
 
       - name: Push ai-service image
         run: |
-          docker push networkcloud01/mcpxgenops/ai-service:${{ github.sha }}
+          docker push networkcloud01/mcpxgenops/ai-service:${{ steps.version.outputs.version }}
           docker push networkcloud01/mcpxgenops/ai-service:latest
 
       - name: Push PostgreSQL image
         run: |
-          docker push networkcloud01/mcpxgenops/postgres:${{ github.sha }}
+          docker push networkcloud01/mcpxgenops/postgres:${{ steps.version.outputs.version }}
           docker push networkcloud01/mcpxgenops/postgres:latest
 
       - name: Push MongoDB image
         run: |
-          docker push networkcloud01/mcpxgenops/mongo:${{ github.sha }}
+          docker push networkcloud01/mcpxgenops/mongo:${{ steps.version.outputs.version }}
           docker push networkcloud01/mcpxgenops/mongo:latest
 
       - name: Push Nginx image
         run: |
-          docker push networkcloud01/mcpxgenops/nginx:${{ github.sha }}
+          docker push networkcloud01/mcpxgenops/nginx:${{ steps.version.outputs.version }}
           docker push networkcloud01/mcpxgenops/nginx:latest
 
   notify-slack:

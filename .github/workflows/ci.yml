@@ -101,6 +101,9 @@ jobs:
     name: Push Docker Images to Docker Hub
     runs-on: self-hosted
     needs: docker-build
+    env:
+      DOCKER_CLIENT_TIMEOUT: 1200
+      COMPOSE_HTTP_TIMEOUT: 1200
     steps:
       - uses: actions/download-artifact@v4
         with:

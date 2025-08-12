@@ -24,7 +24,7 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
   trivy-scan:
-    name: Vulnerability Scan with Trivy
+    name: Vulnerability Scans with Trivy
     runs-on: ubuntu-latest
     needs: sonar-analysis
     steps:

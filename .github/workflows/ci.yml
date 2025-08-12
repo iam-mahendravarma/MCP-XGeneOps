@@ -53,13 +53,8 @@ jobs:
       - name: Run version bump script
         id: version
         run: |
-          VERSION=$(python3 version_bump.py)
-          echo "$VERSION" > version.txt
+          VERSION=$(cat version.txt)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-      - uses: actions/upload-artifact@v4
-        with:
-          name: version
-          path: version.txt
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
